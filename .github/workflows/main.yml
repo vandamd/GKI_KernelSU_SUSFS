@@ -1411,7 +1411,7 @@ jobs:
         exit "$failed"
 
   nightly-release:
-    if: always() && github.event_name == 'workflow_dispatch' && !inputs.test_release_notes && inputs.release_type == 'Action'
+    if: false
     needs: [notes-preview]
     runs-on: ubuntu-latest
     concurrency:
@@ -1608,4 +1608,3 @@ jobs:
           path: release_body.md
           retention-days: 7
           if-no-files-found: warn
-

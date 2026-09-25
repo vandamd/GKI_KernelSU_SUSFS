@@ -460,6 +460,14 @@ jobs:
         version: ${{ inputs.version }}
         bypass: true
 
+    - name: Match Light Phone III vendor compatibility requirements
+      if: inputs.version == 'android12-5.10'
+      uses: ./.github/actions/set-kernel-config
+      with:
+        config_list: |
+          CONFIG_SYSVIPC=n
+          CONFIG_IP6_NF_NAT=n
+
     - name: Build Normal Kernel
       env:
         SOURCE_DATE_EPOCH: ${{ env.SOURCE_DATE_EPOCH }}
@@ -467,6 +475,24 @@ jobs:
       uses: ./.github/actions/build-kernel
       with:
         version: ${{ inputs.version }}
+
+    - name: Verify Light Phone III kernel configuration
+      if: inputs.version == 'android12-5.10'
+      shell: bash
+      run: |
+        set -euo pipefail
+        kernel/common/scripts/extract-ikconfig AnyKernel3/Image > lp3-kernel.config
+        grep -qx '# CONFIG_SYSVIPC is not set' lp3-kernel.config
+        grep -qx '# CONFIG_IP6_NF_NAT is not set' lp3-kernel.config
+        grep -qx 'CONFIG_KSU=y' lp3-kernel.config
+        grep -qx 'CONFIG_KSU_SUSFS=y' lp3-kernel.config
+
+    - name: Save Light Phone III kernel configuration
+      if: inputs.version == 'android12-5.10'
+      uses: actions/upload-artifact@v7
+      with:
+        name: light-phone-iii-kernel-config
+        path: lp3-kernel.config
 
     - name: Get Cache Stats
       uses: ./.github/actions/cache-stats
