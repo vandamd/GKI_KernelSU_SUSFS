@@ -138,20 +138,20 @@ out:
 /* OTA updates can place this exact pair in either slot order. */
 static int check_bootloaders(void)
 {
-	const char *current = "f51fa45314960b3da6f4dfc68e4d2bbc6b821f6a3f6221f77352f4e50e7af98a";
-	const char *previous = "2a983666338dd04e6b2f8c4135c1cc8ae5a65457f9e557398d04774e7a282b30";
+	const char *current_hash = "f51fa45314960b3da6f4dfc68e4d2bbc6b821f6a3f6221f77352f4e50e7af98a";
+	const char *previous_hash = "2a983666338dd04e6b2f8c4135c1cc8ae5a65457f9e557398d04774e7a282b30";
 	int ret;
 
-	ret = check_bootloader("PARTLABEL=abl_a", current);
+	ret = check_bootloader("PARTLABEL=abl_a", current_hash);
 	if (ret == -EKEYREJECTED) {
-		ret = check_bootloader("PARTLABEL=abl_a", previous);
+		ret = check_bootloader("PARTLABEL=abl_a", previous_hash);
 		if (ret)
 			return ret;
-		return check_bootloader("PARTLABEL=abl_b", current);
+		return check_bootloader("PARTLABEL=abl_b", current_hash);
 	}
 	if (ret)
 		return ret;
-	return check_bootloader("PARTLABEL=abl_b", previous);
+	return check_bootloader("PARTLABEL=abl_b", previous_hash);
 }
 
 static int check_oem_unlock(void)
