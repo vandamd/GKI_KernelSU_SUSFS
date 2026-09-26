@@ -468,16 +468,6 @@ jobs:
           CONFIG_SYSVIPC=n
           CONFIG_IP6_NF_NAT=n
 
-    - name: Add bounded Light Phone III unlock interface
-      if: inputs.version == 'android12-5.10' && inputs.sublevel == '198' && inputs.os_patch_level == '2024-01' && inputs.brand_name == 'LP3' && inputs.variant == 'ReSukiSU' && contains(inputs.feature_set, 'BBG')
-      shell: bash
-      run: |
-        set -euo pipefail
-        cp lp3/lp3_unlock.c kernel/common/drivers/misc/lp3_unlock.c
-        cat lp3/Kconfig >> kernel/common/drivers/misc/Kconfig
-        printf '\nobj-$(CONFIG_LP3_UNLOCK) += lp3_unlock.o\n' >> kernel/common/drivers/misc/Makefile
-        kernel/common/scripts/config --file kernel/common/arch/arm64/configs/gki_defconfig --enable LP3_UNLOCK
-
     - name: Build Normal Kernel
       env:
         SOURCE_DATE_EPOCH: ${{ env.SOURCE_DATE_EPOCH }}
@@ -496,6 +486,7 @@ jobs:
         grep -qx '# CONFIG_IP6_NF_NAT is not set' lp3-kernel.config
         grep -qx 'CONFIG_KSU=y' lp3-kernel.config
         grep -qx 'CONFIG_KSU_SUSFS=y' lp3-kernel.config
+        ! grep -qx 'CONFIG_LP3_UNLOCK=y' lp3-kernel.config
 
     - name: Save Light Phone III kernel configuration
       if: inputs.version == 'android12-5.10'
@@ -503,13 +494,6 @@ jobs:
       with:
         name: light-phone-iii-kernel-config
         path: lp3-kernel.config
-
-    - name: Verify bounded unlock interface is enabled
-      if: inputs.version == 'android12-5.10' && inputs.sublevel == '198' && inputs.os_patch_level == '2024-01' && inputs.brand_name == 'LP3' && inputs.variant == 'ReSukiSU' && contains(inputs.feature_set, 'BBG')
-      run: |
-        grep -qx 'CONFIG_LP3_UNLOCK=y' lp3-kernel.config
-        grep -qx 'CONFIG_BBG=y' lp3-kernel.config
-        grep -qx 'CONFIG_CRYPTO_LIB_SHA256=y' lp3-kernel.config
 
     - name: Get Cache Stats
       uses: ./.github/actions/cache-stats
