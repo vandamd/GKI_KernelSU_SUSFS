@@ -1,0 +1,9 @@
+config LP3_UNLOCK
+	bool "Light Phone III bounded unlock-record staging"
+	depends on ARM64 && ARM64_4K_PAGES && KSU && BBG
+	select CRYPTO_LIB_SHA256
+	help
+	  Root-only maintenance interface for TLP301 / 00WW_1_440000.
+	  Stages one 4096-byte unlock record without changing Shell's SELinux
+	  profile or allowing general partition writes. Physical fastboot
+	  confirmation is still required. Experimental until device validated.

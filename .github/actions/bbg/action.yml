@@ -8,8 +8,16 @@ runs:
       uses: ./.github/actions/retry
       with:
         command: |
-          set -o pipefail
-          curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30 https://raw.githubusercontent.com/vc-teahouse/Baseband-guard/main/setup.sh | bash
+          set -euo pipefail
+          BBG_PIN=a54e0dc6cf0aff4dd87fec49644a02d2eb612905
+          if [ ! -d Baseband-guard/.git ]; then
+            git init Baseband-guard
+            git -C Baseband-guard remote add origin https://github.com/vc-teahouse/Baseband-guard.git
+          fi
+          git -C Baseband-guard fetch --depth=1 origin "$BBG_PIN"
+          git -C Baseband-guard checkout --detach "$BBG_PIN"
+          bash Baseband-guard/setup.sh "$BBG_PIN"
+          test "$(git -C Baseband-guard rev-parse HEAD)" = "$BBG_PIN"
         attempts: 5
         delay: 5
         workdir: ${{ github.workspace }}/kernel
