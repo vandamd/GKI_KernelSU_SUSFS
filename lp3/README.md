@@ -22,7 +22,8 @@ The single write operation accepts exactly 4136 bytes, in one write syscall:
 
 There is no caller-controlled path, partition, offset, length, policy switch or
 command. The driver resolves fixed GPT labels using the kernel's partition
-lookup. It requires both tested ABL hashes and sizes, an enabled on-disk OEM
+lookup. Version `lp3-unlock-v2` accepts the exact tested ABL pair in either slot order;
+unknown hashes and duplicate versions remain rejected. It requires both tested ABL hashes and sizes, an enabled on-disk OEM
 unlock permission, the expected mfd size, a matching original partition hash,
 and the empty record markers. It bounds the certificate envelope and padding.
 It does not cryptographically verify the certificate itself; the browser and

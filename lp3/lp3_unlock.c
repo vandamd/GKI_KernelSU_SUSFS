@@ -127,12 +127,31 @@ static int check_bootloader(const char *label, const char *expected)
 		sha256_update(&hash, buffer, RECORD_SIZE);
 	}
 	sha256_final(&hash, digest);
-	ret = memcmp(digest, wanted, sizeof(wanted)) ? -ENODEV : 0;
+	ret = memcmp(digest, wanted, sizeof(wanted)) ? -EKEYREJECTED : 0;
 free_buffer:
 	kfree(buffer);
 out:
 	blkdev_put(bdev, FMODE_READ);
 	return ret;
+}
+
+/* OTA updates can place this exact pair in either slot order. */
+static int check_bootloaders(void)
+{
+	const char *current = "f51fa45314960b3da6f4dfc68e4d2bbc6b821f6a3f6221f77352f4e50e7af98a";
+	const char *previous = "2a983666338dd04e6b2f8c4135c1cc8ae5a65457f9e557398d04774e7a282b30";
+	int ret;
+
+	ret = check_bootloader("PARTLABEL=abl_a", current);
+	if (ret == -EKEYREJECTED) {
+		ret = check_bootloader("PARTLABEL=abl_a", previous);
+		if (ret)
+			return ret;
+		return check_bootloader("PARTLABEL=abl_b", current);
+	}
+	if (ret)
+		return ret;
+	return check_bootloader("PARTLABEL=abl_b", previous);
 }
 
 static int check_oem_unlock(void)
@@ -201,12 +220,7 @@ static int stage_record(const u8 *request)
 	u8 *before, *after;
 	int ret;
 
-	ret = check_bootloader("PARTLABEL=abl_a",
-		"f51fa45314960b3da6f4dfc68e4d2bbc6b821f6a3f6221f77352f4e50e7af98a");
-	if (ret)
-		return ret;
-	ret = check_bootloader("PARTLABEL=abl_b",
-		"2a983666338dd04e6b2f8c4135c1cc8ae5a65457f9e557398d04774e7a282b30");
+	ret = check_bootloaders();
 	if (ret)
 		return ret;
 	ret = check_oem_unlock();
@@ -285,7 +299,7 @@ out:
 static ssize_t lp3_read(struct file *file, char __user *buffer,
 			size_t count, loff_t *position)
 {
-	static const char version[] = "lp3-unlock-v1\n";
+	static const char version[] = "lp3-unlock-v2\n";
 
 	if (!authorised())
 		return -EPERM;
