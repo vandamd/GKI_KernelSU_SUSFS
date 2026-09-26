@@ -352,6 +352,10 @@ jobs:
                   "$flavor" "$owner" "$repo" "$run_id" "$stock"
                 ;;
               resukisu)
+                if [ "${{ steps.resolve.outputs.resukisu_commit }}" = "239e1e8871b8fcd51a6e5b3002e0ba522fdd99fb" ]; then
+                  printf '%s' '{"flavor":"resukisu","owner":"ReSukiSU","repo":"ReSukiSU","source":"release","tag":"v4.2.0-rc3","stock":"239e1e8871b8fcd51a6e5b3002e0ba522fdd99fb"}'
+                  return
+                fi
                 owner="ReSukiSU"; repo="ReSukiSU"; wf="build-manager.yml"
                 stock=$(git ls-remote https://github.com/ReSukiSU/ReSukiSU.git refs/heads/main | awk '{print $1; exit}')
                 run_id=$(curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
@@ -475,8 +479,11 @@ jobs:
             (
               cd "$DLDIR"
               if [ "$SRC" = "release" ]; then
+                TAG=$(echo "$M" | jq -r '.tag // empty')
+                RELEASE_PATH="latest"
+                if [ -n "$TAG" ]; then RELEASE_PATH="tags/${TAG}"; fi
                 curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors \
-                  "https://api.github.com/repos/${OWNER}/${REPO}/releases/latest" > rel.json
+                  "https://api.github.com/repos/${OWNER}/${REPO}/releases/${RELEASE_PATH}" > rel.json
                 for URL in $(jq -r '.assets[] | select(.name | endswith(".apk")) | .browser_download_url' rel.json); do
                   NAME="${URL##*/}"
                   curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors -o "$NAME" "$URL"
@@ -538,6 +545,10 @@ jobs:
             APK_JSON=$(echo "$APK_JSON" | jq -c --arg o "$o" --arg r "$r" --arg n "$n" \
               '. + [{owner:$o,repo:$r,apk:$n}]')
           done < "$MANIFEST"
+          if [ "$APK_JSON" = "[]" ]; then
+            echo "ERROR: No manager APKs found for the selected source." >&2
+            exit 1
+          fi
           echo "apk_list=${APK_JSON}" >> "$GITHUB_OUTPUT"
           echo "Found $(wc -l < "$MANIFEST") manager APKs"
           ls -1 "$OUT_APKS"
