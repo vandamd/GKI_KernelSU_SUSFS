@@ -1,7 +1,7 @@
-# Light Phone III legacy unlock interface
+# Light Phone III unlock maintenance
 
-New kernels no longer include the unlock-maintenance interface. Custom installations stay unlocked; stock restoration does not need the interface in that state.
+New kernels no longer include the unlock-maintenance interface. Custom installations stay unlocked, and stock restoration does not need that interface. The guide offers relocking only after restoring and verifying stock images.
 
-The guide retains support for previously released locked installations. Their `/dev/lp3_unlock` interface stages the existing unlock record with root authorisation: v1 supports slot a, and v2 accepts the tested bootloader pair in either slot order. Neither version protects against firmware changes that remove the underlying unlock method.
+Factory-locked stock phones use Prism and the existing bootloader unlock flow. Future firmware could change or remove that method.
 
-The implementation is preserved in Git history at `7ceeb923`. Do not re-enable custom-firmware relocking in the guide.
+The retired implementation is preserved in Git history at `7ceeb923`. The guide no longer supports unlocking relocked custom installations.
